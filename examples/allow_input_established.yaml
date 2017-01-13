@@ -1,0 +1,7 @@
+wishes:
+    iptables:
+        filter:
+            INPUT:
+                - allow_established:
+                    rule: -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment allow_established -j ACCEPT
+                    before: j
