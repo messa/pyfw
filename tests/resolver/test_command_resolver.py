@@ -6,6 +6,7 @@ from textwrap import dedent
 import yaml
 
 from pyfw.parsing import parse_iptables_save
+from pyfw.resolver.commands import determine_iptables_chain_rule_commands
 
 
 logger = logging.getLogger(__name__)
@@ -73,9 +74,7 @@ sample_wishes = yaml.safe_load(sample_wishes_yaml)['pyfw_wishes']
 def test_demo():
     tables = parse_iptables_save(sample_iptables_save)
     chain_state_rules = tables['filter']['FORWARD']['rules']
-    chain_rule_wishes = sample_wishes['iptables']['FORWARD']['rules']
-    chain_desired_rules = determine_desired_state(chain_state_rules, chain_rule_wishes)
-    assert chain_desired_rules == [
+    chain_desired_rules = [
         '-m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment allow_established -j ACCEPT',
         '-o virbr0 -p tcp -m set --match-set fwd_allowed_dst_ports dst -m set --match-set fwd_allowed_src_hosts src -m comment --comment allow_vm_fwd -j ACCEPT',
         '-o virbr0 -p tcp -m set --match-set fwd_allowed_dst_ports dst -m set ! --match-set fwd_allowed_src_hosts src -m conntrack ! --ctstate RELATED,ESTABLISHED -m comment --comment reject_vm_fwd -j REJECT --reject-with icmp-port-unreachable',
@@ -90,7 +89,7 @@ def test_demo():
         '-i docker0 ! -o docker0 -j ACCEPT',
         '-i docker0 -o docker0 -j ACCEPT',
     ]
-    commands = determine_commands('filter', 'FORWARD', chain_state_rules, chain_desired_rules)
+    commands = determine_iptables_chain_rule_commands('filter', 'FORWARD', chain_state_rules, chain_desired_rules)
     pprint(commands, width=300)
     assert commands == [
         'iptables -w -t filter -I FORWARD 1 -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment _pyfw_temp_allow_established -j ACCEPT',
@@ -128,111 +127,3 @@ def test_demo():
         '',
         'iptables -w -t filter -D FORWARD -p tcp -m set --match-set fwd_allowed_dst_ports dst -m set --match-set fwd_allowed_src_hosts src -m comment --comment allow_vm_fwd -j ACCEPT',
     ]
-
-
-def determine_desired_state(rules, wishes):
-    desired_rules = []
-
-    rules_by_comment = defaultdict(list) # str -> [str]
-    for rule in rules:
-        m = re.search(r'(?:^| )-m comment --comment (?P<comment>[a-zA-z0-9_-]+)(?: |$)', rule)
-        if m:
-            comment = m.group('comment')
-            rules_by_comment[comment].append(rule)
-
-    remaining_rules = list(rules)
-
-    for wish in wishes:
-        if isinstance(wish, dict):
-            (w_key, w_value), = wish.items()
-            assert isinstance(w_key, str)
-            if w_key.startswith('~'):
-                if w_key == '~match':
-                    assert isinstance(w_value, str)
-                    matched_rules = [rule for rule in remaining_rules if re.search(w_value, rule)]
-                    desired_rules.extend(matched_rules)
-                    for rule in matched_rules:
-                        remaining_rules.remove(rule)
-                else:
-                    raise Exception('Key starts with "~" but is not "~match"')
-            else:
-                assert isinstance(w_value, str)
-                desired_rules.append(w_value)
-                for rule in rules_by_comment[w_key]:
-                    remaining_rules.remove(rule)
-        else:
-            raise Exception('Expected to be dict: {!r}'.format(wish))
-
-    desired_rules.extend(remaining_rules)
-    return desired_rules
-
-
-def determine_commands(table_name, chain_name, current_rules, target_rules):
-    pprint(current_rules, width=250)
-    print()
-    pprint(target_rules, width=250)
-    print()
-
-    target_rules = [rule for rule in target_rules if '--comment _pyfw_temp_' not in rule]
-
-    commands = []
-
-    def add_command(op, *args):
-        commands.append('iptables -w -t {table} {op} {chain} {args}'.format(
-            table=table_name, chain=chain_name,
-            op=op, args=' '.join(str(s) for s in args)))
-
-    wip_rules = list(current_rules)
-
-    for pos, rule in enumerate(target_rules):
-        if pos >= len(wip_rules):
-            add_command('-A', rule)
-            wip_rules.append(rule)
-            continue
-
-        if rule == wip_rules[pos]:
-            continue
-
-        if rule in wip_rules:
-            temp_rule = make_temp_rule(rule)
-            if commands and commands[-1] != '':
-                commands.append('')
-
-            add_command('-I', pos + 1, temp_rule)
-            wip_rules.insert(pos, temp_rule)
-
-            for i in range(wip_rules.count(rule)):
-                add_command('-D', rule)
-                wip_rules.remove(rule)
-
-            add_command('-I', pos + 1, rule)
-            wip_rules.insert(pos, rule)
-
-            for i in range(wip_rules.count(temp_rule)):
-                add_command('-D', temp_rule)
-                wip_rules.remove(temp_rule)
-
-            commands.append('')
-
-        else:
-            add_command('-I', pos + 1, rule)
-            wip_rules.insert(pos, rule)
-
-    for rule in wip_rules:
-        if rule not in target_rules:
-            add_command('-D', rule)
-            wip_rules.remove(rule)
-
-    while commands and commands[-1] == '':
-        commands.pop()
-
-    assert wip_rules == target_rules
-    return commands
-
-
-def make_temp_rule(rule):
-    temp_rule = rule.replace('-m comment --comment ', '-m comment --comment _pyfw_temp_')
-    if temp_rule == rule:
-        temp_rule = '-m comment --comment _pyfw_temp_ ' + rule
-    assert temp_rule != rule
-    return temp_rule

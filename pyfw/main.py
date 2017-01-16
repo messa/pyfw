@@ -8,7 +8,7 @@ import yaml
 
 from .state import retrieve_state
 from .util import pretty_yaml_dump
-from .resolver import determine_commands
+from .resolver import determine_desired_state, determine_commands
 
 
 default_wishes_file = '/etc/pyfw/wishes.yaml'
@@ -18,6 +18,8 @@ def pyfw_main():
     p = argparse.ArgumentParser()
     p.add_argument('--use-state', help='load state from file instead of inquiring OS')
     p.add_argument('--print-state', action='store_true', help='just print the state')
+    p.add_argument('--print-desired-state', action='store_true', help='just print the computed desired state (state + wishes)')
+    p.add_argument('--print-state-diff', action='store_true', help='just print the difference between state and computed desired state')
     p.add_argument('--apply', action='store_true', help='execute the commands')
     p.add_argument('--wishes', default=default_wishes_file,
         help='YAML file with your wishes, default: {}'.format(default_wishes_file))
@@ -36,13 +38,28 @@ def pyfw_main():
         real_state_before = state
 
     if args.print_state:
-        print(pretty_yaml_dump({'state': state}), end='')
+        print(pretty_yaml_dump({'pyfw_state': state}), end='')
         return
 
     with open(args.wishes) as f:
-        wishes = yaml.safe_load(f)['wishes']
+        wishes = yaml.safe_load(f)['pyfw_wishes']
 
-    commands = determine_commands(state, wishes)
+    desired_state = determine_desired_state(state, wishes)
+
+    if args.print_desired_state:
+        print(pretty_yaml_dump({'pyfw_state': desired_state}), end='')
+
+    if args.print_state_diff:
+        sys.stdout.writelines(difflib.unified_diff(
+            pretty_yaml_dump({'state': state}).splitlines(True),
+            pretty_yaml_dump({'state': desired_state}).splitlines(True),
+            fromfile='state.yaml',
+            tofile='desired_state.yaml', n=5))
+
+    if args.print_desired_state or args.print_state_diff:
+        return
+
+    commands = determine_commands(state, desired_state)
 
     if args.apply:
 
@@ -68,10 +85,10 @@ def pyfw_main():
             print('State change:')
             print()
             sys.stdout.writelines(difflib.unified_diff(
-                pretty_yaml_dump({'state': real_state_before}).splitlines(True),
-                pretty_yaml_dump({'state': real_state_after}).splitlines(True),
+                pretty_yaml_dump({'pyfw_state': real_state_before}).splitlines(True),
+                pretty_yaml_dump({'pyfw_state': real_state_after}).splitlines(True),
                 fromfile='state_before.yaml',
-                tofile='state_after.yaml', n=5))
+                tofile='real_state_after.yaml', n=5))
 
     else:
         if not commands:
