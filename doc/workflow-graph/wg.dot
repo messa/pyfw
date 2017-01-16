@@ -1,0 +1,44 @@
+digraph {
+    rankdir=LR;
+    fontname=Arial;
+    node [fontname=Arial];
+
+    subgraph cluster_PyFW {
+        label="pyfw";
+
+        construct_desired_state [shape=none,label="construct\ndesired\nstate"];
+        generate_commands [shape=none,label="generate\ncommands"];
+        apply_state [shape=none,label="apply\nstate"];
+
+        desired_state [shape=box,label="desired\nstate"];
+    }
+
+    iptables_save [shape=none,label="iptables-save\nipset save",fontname=monospace];
+    devops [shape=none,label="“devops”"];
+
+    iptables_insert [shape=none,label="iptables -t ... -I ...\niptables -t ... -D ...\nipset add ...",fontname=monospace];
+    iptables_restore [shape=none,label="iptables-restore\nipset restore",fontname=monospace];
+
+    current_state [shape=box,label="current\nstate"];
+    wishes [shape=box,label="wishes.yaml",fontname=monospace];
+
+    iptables_save -> current_state;
+
+    devops -> wishes;
+
+    current_state -> construct_desired_state;
+    wishes -> construct_desired_state;
+
+    construct_desired_state -> desired_state;
+
+    desired_state -> apply_state [style=dashed];
+    apply_state -> iptables_restore;
+
+    current_state -> generate_commands;
+    desired_state -> generate_commands;
+
+    generate_commands -> iptables_insert;
+
+
+
+}
