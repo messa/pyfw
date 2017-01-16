@@ -3,11 +3,11 @@ from pytest import skip
 import yaml
 from textwrap import dedent
 
-#from pyfw.resolver import determine_commands
+from pyfw.resolver import determine_desired_state, determine_commands
 
 
 sample_state_yaml = dedent('''
-    state:
+    pyfw_state:
         ip6tables:
             filter:
                 FORWARD:
@@ -120,11 +120,10 @@ sample_state_yaml = dedent('''
 ''')
 
 
-sample_state = yaml.load(sample_state_yaml)['state']
+sample_state = yaml.load(sample_state_yaml)['pyfw_state']
 
 
 def test_sample_wish_create_new_ipset_bitmap_port():
-    skip()
     wishes = yaml.load(dedent('''
         ipsets:
             new_ipset:
@@ -134,17 +133,17 @@ def test_sample_wish_create_new_ipset_bitmap_port():
                     - 1111
                     - 2222
     '''))
-    cmds = determine_commands(sample_state, wishes)
+    desired_state = determine_desired_state(sample_state, wishes)
+    cmds = determine_commands(sample_state, desired_state)
     pprint(cmds, width=200)
     assert cmds == [
         'ipset -exist create new_ipset bitmap:port range 0-20000',
-        'ipset -exist add new_ipset 2222',
         'ipset -exist add new_ipset 1111',
+        'ipset -exist add new_ipset 2222',
     ]
 
 
 def test_sample_wish_create_new_ipset_hash_ip():
-    skip()
     wishes = yaml.load(dedent('''
         ipsets:
             new_ipset:
@@ -152,7 +151,8 @@ def test_sample_wish_create_new_ipset_hash_ip():
                 members_equal:
                     - 10.20.30.40
     '''))
-    cmds = determine_commands(sample_state, wishes)
+    desired_state = determine_desired_state(sample_state, wishes)
+    cmds = determine_commands(sample_state, desired_state)
     pprint(cmds, width=200)
     assert cmds == [
         'ipset -exist create new_ipset hash:ip',
@@ -161,7 +161,6 @@ def test_sample_wish_create_new_ipset_hash_ip():
 
 
 def test_sample_wish_update_ipset_equal():
-    skip()
     wishes = yaml.load(dedent('''
         ipsets:
             fwd_allowed_dst_ports:
@@ -171,7 +170,8 @@ def test_sample_wish_update_ipset_equal():
                     - 2000
                     - 3000
     '''))
-    cmds = determine_commands(sample_state, wishes)
+    desired_state = determine_desired_state(sample_state, wishes)
+    cmds = determine_commands(sample_state, desired_state)
     pprint(cmds, width=200)
     assert cmds == [
         'ipset -exist del fwd_allowed_dst_ports 1000',

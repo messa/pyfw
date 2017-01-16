@@ -29,7 +29,7 @@ def determine_ipsets_set_commands(set_name, source_set_state, desired_set_state)
         yield 'ipset -exist create {name} {typename} {options}'.format(
             name=set_name,
             typename=desired_set_state['type'],
-            options=desired_set_state.get('header', '')).rstrip()
+            options=(desired_set_state.get('header') or '')).rstrip()
     source_members = set(source_set_state['members']) if source_set_state else set()
     desired_members = set(desired_set_state['members'])
     for to_remove in sorted(source_members - desired_members):

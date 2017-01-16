@@ -3,7 +3,7 @@ from pytest import skip
 import yaml
 from textwrap import dedent
 
-#from pyfw.resolver import determine_commands
+from pyfw.resolver import determine_desired_state, determine_commands
 
 
 sample_state_yaml = dedent('''
@@ -122,6 +122,7 @@ sample_state = yaml.load(sample_state_yaml)['state']
 
 
 def test_multiple_sample_wishes():
+    # TODO fix test and remove skip
     skip()
     wishes = yaml.load(dedent('''
         iptables:
@@ -178,6 +179,7 @@ def test_multiple_sample_wishes():
 
 
 def test_sample_wish_replace_duplicate_rules():
+    # TODO fix test and remove skip
     skip()
     wishes = yaml.load(dedent('''
         iptables:
@@ -199,6 +201,7 @@ def test_sample_wish_replace_duplicate_rules():
 
 
 def test_sample_wish_already_present_rule_no_changes():
+    # TODO fix test and remove skip
     skip()
     wishes = yaml.load(dedent('''
         iptables:
@@ -213,6 +216,7 @@ def test_sample_wish_already_present_rule_no_changes():
 
 
 def test_sample_wish_update_rule():
+    # TODO fix test and remove skip
     skip()
     wishes = yaml.load(dedent('''
         iptables:
@@ -233,6 +237,7 @@ def test_sample_wish_update_rule():
 
 
 def test_sample_wish_append_new_rule():
+    # TODO fix test and remove skip
     skip()
     wishes = yaml.load(dedent('''
         iptables:
@@ -250,6 +255,7 @@ def test_sample_wish_append_new_rule():
 
 
 def test_sample_wish_insert_new_rule():
+    # TODO fix test and remove skip
     skip()
     wishes = yaml.load(dedent('''
         iptables:
@@ -276,6 +282,7 @@ def test_sample_wish_insert_new_rule():
 
 
 def test_sample_wish_reorder_rule():
+    # TODO fix test and remove skip
     skip()
     wishes = yaml.load(dedent('''
         iptables:

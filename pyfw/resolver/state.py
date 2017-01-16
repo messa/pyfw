@@ -25,7 +25,7 @@ def _desired_ipsets_set_state(set_state, set_wishes):
         return set_state
     return {
         'type': set_wishes['type'],
-        'header': set_wishes['header'],
+        'header': set_wishes.get('header'),
         'members': set_wishes['members_equal'],
     }
 
