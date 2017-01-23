@@ -38,7 +38,4 @@ digraph {
     desired_state -> generate_commands;
 
     generate_commands -> iptables_insert;
-
-
-
 }
