@@ -7,7 +7,13 @@ logger = logging.getLogger(__name__)
 
 
 def get_output(cmd):
-    return subprocess.check_output(cmd, universal_newlines=True)
+    try:
+        return subprocess.check_output(cmd, universal_newlines=True)
+    except FileNotFoundError as e:
+        if os.geteuid() != 0:
+            raise Exception('{}; probably must be run under root or sudo'.format(e)) from e
+        else:
+            raise e
 
 
 def retrieve_state():

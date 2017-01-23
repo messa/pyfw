@@ -42,7 +42,10 @@ def pyfw_main():
             state = yaml.safe_load(f)['state']
         real_state_before = None
     else:
-        state = retrieve_state()
+        try:
+            state = retrieve_state()
+        except Exception as e:
+            sys.exit('Failed to retrieve current state: {}'.format(e))
         real_state_before = state
 
     if args.print_state:
