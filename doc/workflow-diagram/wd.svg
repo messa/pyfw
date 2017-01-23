@@ -37,9 +37,9 @@
 </g>
 <!-- iptables_insert -->
 <g id="node7" class="node"><title>iptables_insert</title>
-<text text-anchor="middle" x="736" y="-106.3" font-family="monospace" font-size="14.00">iptables &#45;t ... &#45;I ...</text>
-<text text-anchor="middle" x="736" y="-91.3" font-family="monospace" font-size="14.00">iptables &#45;t ... &#45;D ...</text>
-<text text-anchor="middle" x="736" y="-76.3" font-family="monospace" font-size="14.00">ipset add ...</text>
+<text text-anchor="start" x="645" y="-106.3" font-family="monospace" font-size="14.00">iptables &#45;t ... &#45;I ...</text>
+<text text-anchor="start" x="645" y="-91.3" font-family="monospace" font-size="14.00">iptables &#45;t ... &#45;D ...</text>
+<text text-anchor="start" x="645" y="-76.3" font-family="monospace" font-size="14.00">ipset add ...</text>
 </g>
 <!-- generate_commands&#45;&gt;iptables_insert -->
 <g id="edge10" class="edge"><title>generate_commands&#45;&gt;iptables_insert</title>
@@ -53,8 +53,8 @@
 </g>
 <!-- iptables_restore -->
 <g id="node8" class="node"><title>iptables_restore</title>
-<text text-anchor="middle" x="736" y="-34.8" font-family="monospace" font-size="14.00">iptables&#45;restore</text>
-<text text-anchor="middle" x="736" y="-19.8" font-family="monospace" font-size="14.00">ipset restore</text>
+<text text-anchor="start" x="669.5" y="-34.8" font-family="monospace" font-size="14.00">iptables&#45;restore</text>
+<text text-anchor="start" x="669.5" y="-19.8" font-family="monospace" font-size="14.00">ipset restore</text>
 </g>
 <!-- apply_state&#45;&gt;iptables_restore -->
 <g id="edge7" class="edge"><title>apply_state&#45;&gt;iptables_restore</title>
@@ -73,8 +73,8 @@
 </g>
 <!-- iptables_save -->
 <g id="node5" class="node"><title>iptables_save</title>
-<text text-anchor="middle" x="62" y="-101.8" font-family="monospace" font-size="14.00">iptables&#45;save</text>
-<text text-anchor="middle" x="62" y="-86.8" font-family="monospace" font-size="14.00">ipset save</text>
+<text text-anchor="start" x="8" y="-101.8" font-family="monospace" font-size="14.00">iptables&#45;save</text>
+<text text-anchor="start" x="8" y="-86.8" font-family="monospace" font-size="14.00">ipset save</text>
 </g>
 <!-- current_state -->
 <g id="node9" class="node"><title>current_state</title>

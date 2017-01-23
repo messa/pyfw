@@ -13,11 +13,11 @@ digraph {
         desired_state [shape=box,label="desired\nstate"];
     }
 
-    iptables_save [shape=none,label="iptables-save\nipset save",fontname=monospace];
+    iptables_save [shape=none,label="iptables-save\lipset save\l",fontname=monospace];
     devops [shape=none,label="“devops”"];
 
-    iptables_insert [shape=none,label="iptables -t ... -I ...\niptables -t ... -D ...\nipset add ...",fontname=monospace];
-    iptables_restore [shape=none,label="iptables-restore\nipset restore",fontname=monospace];
+    iptables_insert [shape=none,label="iptables -t ... -I ...\liptables -t ... -D ...\lipset add ...\l",fontname=monospace];
+    iptables_restore [shape=none,label="iptables-restore\lipset restore\l",fontname=monospace];
 
     current_state [shape=box,label="current\nstate"];
     wishes [shape=box,label="wishes.yaml",fontname=monospace];
