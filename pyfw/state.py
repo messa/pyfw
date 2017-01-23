@@ -6,10 +6,7 @@ import subprocess
 logger = logging.getLogger(__name__)
 
 
-def get_output(cmd, sudo=True):
-    if sudo and os.geteuid() != 0:
-        logger.debug('Prepending "sudo" before command')
-        cmd = ['sudo'] + cmd
+def get_output(cmd):
     return subprocess.check_output(cmd, universal_newlines=True)
 
 
@@ -20,7 +17,11 @@ def retrieve_state():
     get_output(['ip6tables', '-L'])
     iptables_save = get_output(['iptables-save'])
     ip6tables_save = get_output(['ip6tables-save'])
-    ipset_list = get_output(['sudo', 'ipset', 'list'])
+    if not iptables_save.strip():
+        raise Exception('Output if iptables-save is empty')
+    if not ip6tables_save.strip():
+        raise Exception('Output if ip6tables-save is empty')
+    ipset_list = get_output(['ipset', 'list'])
     return {
         'iptables': parse_iptables_save(iptables_save),
         'ip6tables': parse_iptables_save(ip6tables_save),

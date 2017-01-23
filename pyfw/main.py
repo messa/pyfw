@@ -72,10 +72,7 @@ def pyfw_main():
             if not real_state_before:
                 real_state_before = retrieve_state()
 
-            use_sudo = (os.geteuid() != 0)
             for n, cmd in enumerate(commands, start=1):
-                if use_sudo:
-                    cmd = 'sudo ' + cmd
                 print('Executing command {:2d}/{}: {}'.format(n, len(commands), cmd))
                 subprocess.check_call(cmd, shell=True)
 
