@@ -6,7 +6,7 @@ TODO :)
 Workflow
 --------
 
-![Workflow diagram](https://cdn.rawgit.com/messa/pyfw/master/doc/workflow-graph/wg.svg)
+![Workflow diagram](https://cdn.rawgit.com/messa/pyfw/master/doc/workflow-diagram/wd.svg)
 
 Usage
 -----
