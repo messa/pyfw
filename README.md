@@ -2,6 +2,7 @@ PyFW: Python Firewall
 =====================
 
 [![Build Status](https://travis-ci.org/messa/pyfw.svg?branch=master)](https://travis-ci.org/messa/pyfw)
+[![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/pyfw/Lobby)
 
 TODO :)
 
