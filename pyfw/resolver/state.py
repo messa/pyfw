@@ -14,6 +14,10 @@ def determine_desired_state(source_state, wishes):
 
 
 def _desired_ipsets_state(ipsets_state, ipsets_wishes):
+    if not ipsets_wishes:
+        return ipsets_state
+    assert isinstance(ipsets_state, dict)
+    assert isinstance(ipsets_wishes, dict)
     desired_ipsets_state = {}
     for set_name, set_state, set_wishes in zip_dicts(ipsets_state, ipsets_wishes):
         desired_ipsets_state[set_name] = _desired_ipsets_set_state(set_state, set_wishes)
