@@ -1,1 +1,1 @@
-from .main import pyfw_main
+from .main import pyfw_main, __version__

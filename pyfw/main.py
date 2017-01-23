@@ -2,6 +2,7 @@ import argparse
 import difflib
 import logging
 import os
+from pathlib import Path
 import subprocess
 import sys
 import yaml
@@ -11,11 +12,14 @@ from .util import pretty_yaml_dump
 from .resolver import determine_desired_state, determine_commands
 
 
+__version__ = '0.1.1'
+
 default_wishes_file = '/etc/pyfw/wishes.yaml'
 
 
 def pyfw_main():
     p = argparse.ArgumentParser()
+    p.add_argument('--version', action='store_true', help='show version info and exit')
     p.add_argument('--use-state', help='load state from file instead of inquiring OS')
     p.add_argument('--print-state', action='store_true', help='just print the state')
     p.add_argument('--print-desired-state', action='store_true', help='just print the computed desired state (state + wishes)')
@@ -24,6 +28,10 @@ def pyfw_main():
     p.add_argument('--wishes', default=default_wishes_file,
         help='YAML file with your wishes, default: {}'.format(default_wishes_file))
     args = p.parse_args()
+
+    if args.version:
+        print('pyfw version {} in {}'.format(__version__, Path(__file__).parent))
+        sys.exit()
 
     logging.basicConfig(
         format='%(message)s',
