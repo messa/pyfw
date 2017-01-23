@@ -6,6 +6,7 @@ from textwrap import dedent
 import yaml
 
 from pyfw.parsing import parse_iptables_save
+from pyfw.resolver.commands import determine_commands
 from pyfw.resolver.commands import determine_iptables_chain_rule_commands
 
 
@@ -71,7 +72,7 @@ pyfw_wishes:
 sample_wishes = yaml.safe_load(sample_wishes_yaml)['pyfw_wishes']
 
 
-def test_demo():
+def test_determine_iptables_chain_rule_commands():
     tables = parse_iptables_save(sample_iptables_save)
     chain_state_rules = tables['filter']['FORWARD']['rules']
     chain_desired_rules = [
@@ -126,4 +127,43 @@ def test_demo():
         'iptables -w -t filter -D FORWARD -m comment --comment _pyfw_temp_ -i virbr0 -j REJECT --reject-with icmp-port-unreachable',
         '',
         'iptables -w -t filter -D FORWARD -p tcp -m set --match-set fwd_allowed_dst_ports dst -m set --match-set fwd_allowed_src_hosts src -m comment --comment allow_vm_fwd -j ACCEPT',
+    ]
+
+
+def test_change_default_action():
+    source_state = yaml.load(dedent('''
+        pyfw_state:
+            ipsets: {}
+            iptables:
+                filter:
+                    FORWARD:
+                        default_action: ACCEPT
+                        rules: []
+                    INPUT:
+                        default_action: ACCEPT
+                        rules: []
+                    OUTPUT:
+                        default_action: ACCEPT
+                        rules: []
+    '''))['pyfw_state']
+    desired_state = yaml.load(dedent('''
+        pyfw_state:
+            ipsets: {}
+            iptables:
+                filter:
+                    FORWARD:
+                        default_action: ACCEPT
+                        rules: []
+                    INPUT:
+                        default_action: DROP
+                        rules:
+                        - -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment allow_established -j ACCEPT
+                    OUTPUT:
+                        default_action: ACCEPT
+                        rules: []
+    '''))['pyfw_state']
+    commands = determine_commands(source_state, desired_state)
+    assert commands == [
+        'iptables -w -t filter -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment allow_established -j ACCEPT',
+        'iptables -w -t filter -P INPUT DROP',
     ]

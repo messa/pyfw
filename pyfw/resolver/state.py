@@ -70,10 +70,7 @@ def determine_desired_chain_state(chain_state, chain_wishes):
 
 
 def determine_desired_chain_default_action(state_action, wish_action):
-    if not wish_action:
-        return state_action
-    else:
-        return wish_action
+    return wish_action or state_action
 
 
 def determine_desired_chain_rules(rules, wishes):

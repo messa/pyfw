@@ -57,6 +57,13 @@ def determine_iptables_chain_commands(table_name, chain_name, source_chain_state
         table_name, chain_name,
         source_chain_state.get('rules'),
         desired_chain_state.get('rules'))
+    # default action command
+    desired_default_action = desired_chain_state['default_action']
+    source_default_action = source_chain_state.get('default_action')
+    assert desired_default_action
+    if desired_default_action != source_default_action:
+        yield 'iptables -w -t {table} -P {chain} {action}'.format(
+            table=table_name, chain=chain_name, action=desired_default_action)
 
 
 def determine_ip6tables_commands(source_ip6tables_state, desired_ip6tables_state):
