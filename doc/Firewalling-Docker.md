@@ -283,3 +283,63 @@ COMMIT
 -A DOCKER-ISOLATION -j RETURN
 COMMIT
 </pre>
+
+__And the best thing about pyfw?__
+When Docker restarts it moves all its rules to the beginning of FORWARD chain:
+
+```
+$ systemctl restart docker.service
+```
+
+Changes made to the `iptables-save`:
+
+<pre>
+ *nat
+ :PREROUTING ACCEPT [1:169]
+ :INPUT ACCEPT [0:0]
+ :OUTPUT ACCEPT [0:0]
+ :POSTROUTING ACCEPT [0:0]
+ :DOCKER - [0:0]
+ -A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
+ -A OUTPUT ! -d 127.0.0.0/8 -m addrtype --dst-type LOCAL -j DOCKER
+ -A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE
++-A POSTROUTING -s 172.17.0.2/32 -d 172.17.0.2/32 -p tcp -m tcp --dport 80 -j MASQUERADE
+ -A DOCKER -i docker0 -j RETURN
++-A DOCKER ! -i docker0 -p tcp -m tcp --dport 8000 -j DNAT --to-destination 172.17.0.2:80
+ COMMIT
+ *filter
+ :INPUT DROP [1:169]
+ :FORWARD DROP [0:0]
+ :OUTPUT ACCEPT [32:2896]
+ :DOCKER - [0:0]
+ :DOCKER-ISOLATION - [0:0]
+ -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment allow_established -j ACCEPT
+ -A INPUT -p tcp -m tcp --dport 22 -m comment --comment allow_ssh -j ACCEPT
+ -A INPUT -s 172.17.0.0/24 -i docker0 -m comment --comment allow_inter_docker -j ACCEPT
+--A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment allow_established -j ACCEPT
+ -A FORWARD -j DOCKER-ISOLATION
+ -A FORWARD -o docker0 -j DOCKER
+ -A FORWARD -o docker0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+ -A FORWARD -i docker0 ! -o docker0 -j ACCEPT
+ -A FORWARD -i docker0 -o docker0 -j ACCEPT
+--A DOCKER ! -i docker0 -o docker0 -m set ! --match-set allowed_hosts src -m comment --comment allowed_hosts_only -j REJECT --reject-with icmp-port-unreachable
++-A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment allow_established -j ACCEPT
++-A DOCKER -d 172.17.0.2/32 ! -i docker0 -o docker0 -p tcp -m tcp --dport 80 -j ACCEPT
+ -A DOCKER-ISOLATION -j RETURN
+ COMMIT
+</pre>
+
+But we need the rule `allow_established` to be first in the FORWARD chain, and also the rule `allowed_hosts_only` has dissapeared from chain DOCKER.
+It can be fixed by __pyfw__ easily:
+
+<pre>
+$ pyfw --apply
+Executing command  1/5: iptables -w -t filter -I DOCKER 1 ! -i docker0 -o docker0 -m set ! --match-set allowed_hosts src -m comment --comment allowed_hosts_only -j REJECT --reject-with icmp-port-unreachable
+Executing command  2/5: iptables -w -t filter -I FORWARD 1 -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment _pyfw_temp_allow_established -j ACCEPT
+Executing command  3/5: iptables -w -t filter -D FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment allow_established -j ACCEPT
+Executing command  4/5: iptables -w -t filter -I FORWARD 1 -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment allow_established -j ACCEPT
+Executing command  5/5: iptables -w -t filter -D FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment _pyfw_temp_allow_established -j ACCEPT
+</pre>
+
+Notice how the reordering of `allow_established` is done - first a temporary `_pyfw_temp_allow_established` is inserted, then the old `allow_established` is removed, then inserted to the right place and then the temporary `_pyfw_temp_allow_established` is removed.
+This is designed in this way to be as robust as possible, even if other scripts and programs (Docker, libvirt) are manipulating other iptables in the same time (should not happen, but _could happen_).
