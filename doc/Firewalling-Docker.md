@@ -252,7 +252,7 @@ pyfw_wishes:
 
 State of `iptables-save` after `pyfw --apply` (and after a reboot to clean up our experimental iptables rules); the bold lines are the ones introduced by `pyfw --apply`:
 
-```
+<pre>
 *nat
 :PREROUTING ACCEPT [4:381]
 :INPUT ACCEPT [4:381]
@@ -282,4 +282,4 @@ COMMIT
 <b>-A DOCKER ! -i docker0 -o docker0 -m set ! --match-set allowed_hosts src -m comment --comment allowed_hosts_only -j REJECT --reject-with icmp-port-unreachable</b>
 -A DOCKER-ISOLATION -j RETURN
 COMMIT
-```
+</pre>
