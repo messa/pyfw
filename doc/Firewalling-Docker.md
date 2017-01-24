@@ -250,7 +250,7 @@ pyfw_wishes:
         - allowed_hosts_only: '! -i docker0 -o docker0 -m set ! --match-set allowed_hosts src -m comment --comment allowed_hosts_only -j REJECT --reject-with icmp-port-unreachable'
 ```
 
-State of `iptables-save` after `pyfw --apply` (and after a reboot to clean up our experimental iptables rules); the bold lines are the ones introduced by `pyfw --apply`:
+State of `iptables-save` after a reboot to clean up our experimental iptables rules and after `pyfw --apply` ; the bold lines are the ones introduced by `pyfw --apply`:
 
 <pre>
 *nat
