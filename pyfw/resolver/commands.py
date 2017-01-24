@@ -122,9 +122,9 @@ def determine_iptables_chain_rule_commands(table_name, chain_name, current_rules
             add_command('-I', pos + 1, rule)
             wip_rules.insert(pos, rule)
 
-            if wip_rules[pos] not in target_rules:
-                add_command('-D', wip_rules[pos])
-                wip_rules.remove(wip_rules[pos])
+            if wip_rules[pos+1] not in target_rules:
+                add_command('-D', wip_rules[pos+1])
+                wip_rules.remove(wip_rules[pos+1])
 
     for rule in wip_rules:
         if rule not in target_rules:
