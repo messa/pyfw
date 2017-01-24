@@ -19,6 +19,7 @@ Our goal:
 - All Docker containers on Docker Host can connect to 172.17.0.1:8000
 - Host 2 (192.168.122.193) can connect to 192.168.122.190:8000 (to talk with Docker container 1)
 - No other hosts (other than Host 2) can connect to 192.168.122.190:8000
+- We want to switch INPUT default policy to DROP (because white-listing is safer than black-listing)
 
 This is how iptables-save looks like just after running Docker and `docker run -d -p 8000:80 nginx`:
 
