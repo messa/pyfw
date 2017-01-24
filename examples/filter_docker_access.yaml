@@ -1,0 +1,21 @@
+pyfw_wishes:
+  ipsets:
+    allowed_hosts:
+      type: hash:ip
+      members_equal:
+      - 192.168.122.193
+  iptables:
+    filter:
+      INPUT:
+        default_action: DROP
+        rules:
+        - allow_established: -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment allow_established -j ACCEPT
+        - allow_ssh: -p tcp -m tcp --dport 22 -m comment --comment allow_ssh -j ACCEPT
+        - allow_inter_docker: -s 172.17.0.0/24 -i docker0 -m comment --comment allow_inter_docker -j ACCEPT
+      FORWARD:
+        default_action: DROP
+        rules:
+        - allow_established: -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment allow_established -j ACCEPT
+      DOCKER:
+        rules:
+        - allowed_hosts_only: '! -i docker0 -o docker0 -m set ! --match-set allowed_hosts src -m comment --comment allowed_hosts_only -j REJECT --reject-with icmp-port-unreachable'
