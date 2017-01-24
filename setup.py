@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pyfw',
-    version='0.1.2',
+    version='0.1.3',
     description='Python Firewall',
     author='Petr Messner',
     author_email='petr.messner@gmail.com',
