@@ -126,6 +126,8 @@ $ ipset save
 create allowed_hosts hash:ip family inet hashsize 1024 maxelem 65536
 add allowed_hosts 192.168.122.193
 $ iptables -I DOCKER ! -i docker0 -o docker0 -m set ! --match-set allowed_hosts src -j REJECT
+# but we don't want to reject connection from container to the outer world:
+$ iptables -I FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 ```
 
 New `iptables-save`:
@@ -152,6 +154,7 @@ COMMIT
 :DOCKER-ISOLATION - [0:0]
 -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+<b>-A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT</b>
 -A FORWARD -j DOCKER-ISOLATION
 -A FORWARD -o docker0 -j DOCKER
 -A FORWARD -o docker0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
@@ -245,4 +248,38 @@ pyfw_wishes:
       DOCKER:
         rules:
         - allowed_hosts_only: '! -i docker0 -o docker0 -m set ! --match-set allowed_hosts src -m comment --comment allowed_hosts_only -j REJECT --reject-with icmp-port-unreachable'
+```
+
+State of `iptables-save` after `pyfw --apply` (and after a reboot to clean up our experimental iptables rules); the bold lines are the ones introduced by `pyfw --apply`:
+
+```
+*nat
+:PREROUTING ACCEPT [4:381]
+:INPUT ACCEPT [4:381]
+:OUTPUT ACCEPT [6:420]
+:POSTROUTING ACCEPT [6:420]
+:DOCKER - [0:0]
+-A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
+-A OUTPUT ! -d 127.0.0.0/8 -m addrtype --dst-type LOCAL -j DOCKER
+-A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE
+-A DOCKER -i docker0 -j RETURN
+COMMIT
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [113:11476]
+:DOCKER - [0:0]
+:DOCKER-ISOLATION - [0:0]
+<b>-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment allow_established -j ACCEPT</b>
+<b>-A INPUT -p tcp -m tcp --dport 22 -m comment --comment allow_ssh -j ACCEPT</b>
+<b>-A INPUT -s 172.17.0.0/24 -i docker0 -m comment --comment allow_inter_docker -j ACCEPT</b>
+<b>-A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment allow_established -j ACCEPT</b>
+-A FORWARD -j DOCKER-ISOLATION
+-A FORWARD -o docker0 -j DOCKER
+-A FORWARD -o docker0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -i docker0 ! -o docker0 -j ACCEPT
+-A FORWARD -i docker0 -o docker0 -j ACCEPT
+<b>-A DOCKER ! -i docker0 -o docker0 -m set ! --match-set allowed_hosts src -m comment --comment allowed_hosts_only -j REJECT --reject-with icmp-port-unreachable</b>
+-A DOCKER-ISOLATION -j RETURN
+COMMIT
 ```
