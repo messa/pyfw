@@ -1,13 +1,6 @@
 pyfw_wishes:
-    ipsets:
-        sample_ports:
-            type: bitmap:port
-            header: range 0-20000
-            members_equal:
-                - 1111
-                - 2222
-    iptables:
-        filter:
-            INPUT:
-                rules:
-                - allow_established: -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment allow_established -j ACCEPT
+  iptables:
+    filter:
+      INPUT:
+        rules:
+        - allow_established: -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment allow_established -j ACCEPT
