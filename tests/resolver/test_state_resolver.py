@@ -1,6 +1,7 @@
 from collections import defaultdict
 import logging
 from pprint import pprint
+from pytest import skip
 import re
 from textwrap import dedent
 import yaml
@@ -150,6 +151,9 @@ def test_determine_desired_state():
                     - ~match: virbr0|192\.168\.122\.
                     - ~match: docker0|DOCKER
                     - last: -m comment --comment last -j ACCEPT
+                DOCKER:
+                    rules:
+                    - allowed_hosts_only: '! -i docker0 -o docker0 -m set ! --match-set allowed_hosts src -m comment --comment allowed_hosts_only -j REJECT --reject-with icmp-port-unreachable'
     ''')
     desired_state = determine_desired_state(sample_state, sample_wishes)
     print(pretty_yaml_dump(desired_state))
@@ -170,7 +174,8 @@ def test_determine_desired_state():
             filter:
                 DOCKER:
                     default_action: '-'
-                    rules: []
+                    rules:
+                    - '! -i docker0 -o docker0 -m set ! --match-set allowed_hosts src -m comment --comment allowed_hosts_only -j REJECT --reject-with icmp-port-unreachable'
                 DOCKER-ISOLATION:
                     default_action: '-'
                     rules:
@@ -236,6 +241,9 @@ def test_determine_desired_state_empty_sample_state():
                     - ~match: virbr0|192\.168\.122\.
                     - ~match: docker0|DOCKER
                     - last: -m comment --comment last -j ACCEPT
+                DOCKER:
+                    rules:
+                    - allowed_hosts_only: '! -i docker0 -o docker0 -m set ! --match-set allowed_hosts src -m comment --comment allowed_hosts_only -j REJECT --reject-with icmp-port-unreachable'
     ''')
     desired_state = determine_desired_state(sample_state, sample_wishes)
     print(pretty_yaml_dump(desired_state))
@@ -254,6 +262,10 @@ def test_determine_desired_state_empty_sample_state():
         ipsets: {}
         iptables:
             filter:
+                DOCKER:
+                    default_action: '-'
+                    rules:
+                    - '! -i docker0 -o docker0 -m set ! --match-set allowed_hosts src -m comment --comment allowed_hosts_only -j REJECT --reject-with icmp-port-unreachable'
                 FORWARD:
                     default_action: DROP
                     rules:

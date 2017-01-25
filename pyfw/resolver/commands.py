@@ -62,10 +62,18 @@ def determine_iptables_table_commands(table_name, source_table_state, desired_ta
 
 
 def determine_iptables_chain_commands(table_name, chain_name, source_chain_state, desired_chain_state):
+    if source_chain_state is None:
+        yield 'iptables -w -t {table} -N {chain}'.format(
+            table=table_name, chain=chain_name)
+        source_chain_state = {
+            'default_action': '-',
+            'rules': [],
+        }
+    assert isinstance(source_chain_state, dict), smart_repr(source_chain_state)
     yield from determine_iptables_chain_rule_commands(
         table_name, chain_name,
-        source_chain_state.get('rules'),
-        desired_chain_state.get('rules'))
+        source_chain_state['rules'],
+        desired_chain_state['rules'])
     # default action command
     desired_default_action = desired_chain_state['default_action']
     source_default_action = source_chain_state.get('default_action')

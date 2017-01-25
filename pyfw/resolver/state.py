@@ -68,6 +68,11 @@ def determine_desired_chain_state(chain_state, chain_wishes):
             'Chain wishes expected to be a dict '
             '(with default_action and/or rules); got {}'.format(
                 smart_repr(chain_wishes)))
+    if not chain_state:
+        chain_state = {
+            'default_action': '-',
+            'rules': [],
+        }
     return {
         'default_action': determine_desired_chain_default_action(
             chain_state.get('default_action'),
@@ -83,6 +88,7 @@ def determine_desired_chain_default_action(state_action, wish_action):
 
 
 def determine_desired_chain_rules(rules, wishes):
+    assert isinstance(rules, list), smart_repr(rules)
     if not wishes:
         return rules
 
