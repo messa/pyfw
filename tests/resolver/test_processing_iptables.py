@@ -208,54 +208,64 @@ def test_multiple_sample_wishes():
 
 
 def test_sample_wish_replace_duplicate_rules():
-    # TODO fix test and remove skip
-    skip()
-    wishes = yaml.load(dedent('''
+    wishes = _load_wishes('''
+    pyfw_wishes:
         iptables:
             filter:
                 INPUT:
-                    - sample_rule_0:
-                        # this rule is the same as already present, but multiple times
-                        rule: -s 192.168.0.0/24 -p tcp -m tcp --dport 9999 -m comment --comment sample_rule_0 -j ACCEPT
-    '''))
-    cmds = determine_commands(sample_state, wishes)
+                    rules:
+                    # this rule is the same as already present, but multiple times
+                    - sample_rule_0: -s 192.168.0.0/24 -p tcp -m tcp --dport 9999 -m comment --comment sample_rule_0 -j ACCEPT
+    ''')
+    desired_state = determine_desired_state(sample_state, wishes)
+    cmds = determine_commands(sample_state, desired_state)
+    print_diff(sample_state, desired_state, 'sample_state', 'desired_state')
     pprint(cmds, width=200)
     assert cmds == [
-        'iptables -w -t filter -A INPUT -s 192.168.0.0/24 -p tcp -m tcp --dport 9999 -m comment --comment _pyfwtmp__sample_rule_0 -j ACCEPT',
+        'iptables -w -t filter -I INPUT 1 -s 192.168.0.0/24 -p tcp -m tcp --dport 9999 -m comment --comment _pyfw_temp_sample_rule_0 -j ACCEPT',
         'iptables -w -t filter -D INPUT -s 192.168.0.0/24 -p tcp -m tcp --dport 9999 -m comment --comment sample_rule_0 -j ACCEPT',
         'iptables -w -t filter -D INPUT -s 192.168.0.0/24 -p tcp -m tcp --dport 9999 -m comment --comment sample_rule_0 -j ACCEPT',
-        'iptables -w -t filter -A INPUT -s 192.168.0.0/24 -p tcp -m tcp --dport 9999 -m comment --comment sample_rule_0 -j ACCEPT',
-        'iptables -w -t filter -D INPUT -s 192.168.0.0/24 -p tcp -m tcp --dport 9999 -m comment --comment _pyfwtmp__sample_rule_0 -j ACCEPT',
+        'iptables -w -t filter -I INPUT 1 -s 192.168.0.0/24 -p tcp -m tcp --dport 9999 -m comment --comment sample_rule_0 -j ACCEPT',
+        'iptables -w -t filter -D INPUT -s 192.168.0.0/24 -p tcp -m tcp --dport 9999 -m comment --comment _pyfw_temp_sample_rule_0 -j ACCEPT',
     ]
 
 
 def test_sample_wish_already_present_rule_no_changes():
-    # TODO fix test and remove skip
-    skip()
-    wishes = yaml.load(dedent('''
+    skip() # TODO: this should not test reorder
+    wishes = _load_wishes('''
+    pyfw_wishes:
         iptables:
             filter:
                 INPUT:
-                    - sample_rule_1:
-                        # this rule is the same as already present - no changes
-                        rule: -s 192.168.111.0/24 -p tcp -m tcp --dport 9999 -m comment --comment sample_rule_1 -j ACCEPT
-    '''))
-    cmds = determine_commands(sample_state, wishes)
-    assert cmds == []
+                    rules:
+                    # this rule is the same as already present - no changes
+                    - sample_rule_1: -s 192.168.111.0/24 -p tcp -m tcp --dport 9999 -m comment --comment sample_rule_1 -j ACCEPT
+    ''')
+    desired_state = determine_desired_state(sample_state, wishes)
+    cmds = determine_commands(sample_state, desired_state)
+    print_diff(sample_state, desired_state, 'sample_state', 'desired_state')
+    pprint(cmds, width=200)
+    assert cmds == [
+        'iptables -w -t filter -I INPUT 1 -s 192.168.111.0/24 -p tcp -m tcp --dport 9999 -m comment --comment _pyfw_temp_sample_rule_1 -j ACCEPT',
+        'iptables -w -t filter -D INPUT -s 192.168.111.0/24 -p tcp -m tcp --dport 9999 -m comment --comment sample_rule_1 -j ACCEPT',
+        'iptables -w -t filter -I INPUT 1 -s 192.168.111.0/24 -p tcp -m tcp --dport 9999 -m comment --comment sample_rule_1 -j ACCEPT',
+        'iptables -w -t filter -D INPUT -s 192.168.111.0/24 -p tcp -m tcp --dport 9999 -m comment --comment _pyfw_temp_sample_rule_1 -j ACCEPT',
+    ]
 
 
 def test_sample_wish_update_rule():
-    # TODO fix test and remove skip
-    skip()
-    wishes = yaml.load(dedent('''
+    skip() # TODO: this should not test reorder
+    wishes = _load_wishes('''
+    pyfw_wishes:
         iptables:
             filter:
                 INPUT:
-                    - sample_rule_2:
-                        # this rule has same comment as already present but is different - should update
-                        rule: -s 192.168.222.222/32 -p tcp -m tcp --dport 2222 -m comment --comment sample_rule_2 -j ACCEPT
-    '''))
-    cmds = determine_commands(sample_state, wishes)
+                    # this rule has same comment as already present but is different - should update
+                    - sample_rule_2: -s 192.168.222.222/32 -p tcp -m tcp --dport 2222 -m comment --comment sample_rule_2 -j ACCEPT
+    ''')
+    desired_state = determine_desired_state(sample_state, wishes)
+    cmds = determine_commands(sample_state, desired_state)
+    print_diff(sample_state, desired_state, 'sample_state', 'desired_state')
     pprint(cmds, width=200)
     assert cmds == [
         'iptables -w -t filter -A INPUT -s 192.168.222.222/32 -p tcp -m tcp --dport 2222 -m comment --comment _pyfwtmp__sample_rule_2 -j ACCEPT',
