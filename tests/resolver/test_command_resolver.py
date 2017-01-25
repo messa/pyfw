@@ -57,21 +57,6 @@ sample_iptables_save = dedent('''
 ''')
 
 
-sample_wishes_yaml = '''
-pyfw_wishes:
-    iptables:
-        FORWARD:
-            rules:
-            - allow_established: -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment allow_established -j ACCEPT
-            - allow_vm_fwd: -o virbr0 -p tcp -m set --match-set fwd_allowed_dst_ports dst -m set --match-set fwd_allowed_src_hosts src -m comment --comment allow_vm_fwd -j ACCEPT
-            - reject_vm_fwd: -o virbr0 -p tcp -m set --match-set fwd_allowed_dst_ports dst -m set ! --match-set fwd_allowed_src_hosts src -m conntrack ! --ctstate RELATED,ESTABLISHED -m comment --comment reject_vm_fwd -j REJECT --reject-with icmp-port-unreachable
-            - ~match: virbr0|192\.168\.122\.
-            - ~match: docker0|DOCKER
-'''
-
-sample_wishes = yaml.safe_load(sample_wishes_yaml)['pyfw_wishes']
-
-
 def test_determine_iptables_chain_rule_commands():
     tables = parse_iptables_save(sample_iptables_save)
     chain_state_rules = tables['filter']['FORWARD']['rules']
