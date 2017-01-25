@@ -1,3 +1,33 @@
+import difflib
+import reprlib
+import sys
+
+from .pretty_yaml import pretty_yaml_dump
+
+
+_repr_obj = reprlib.Repr()
+_repr_obj.maxstring = 80
+_repr_obj.maxother = 80
+
+smart_repr = _repr_obj.repr
+
+
+def print_diff(a, b, a_name='a', b_name='b', context=5, stream=None):
+    if stream is None:
+        stream = sys.stdout
+    a = _diff_preprocess(a)
+    b = _diff_preprocess(b)
+    dl = difflib.unified_diff(a, b, fromfile=a_name, tofile=b_name, n=context)
+    stream.writelines(dl)
+
+
+def _diff_preprocess(x):
+    if not isinstance(x, (str, list)):
+        x = pretty_yaml_dump(x)
+    if isinstance(x, str):
+        x = x.splitlines(True)
+    return x
+
 
 def zip_dicts(*args):
     all_keys = set()

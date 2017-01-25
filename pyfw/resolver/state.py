@@ -2,7 +2,7 @@ from collections import defaultdict
 from pprint import pprint
 import re
 
-from ..util import zip_dicts
+from ..util import smart_repr, zip_dicts
 
 
 def determine_desired_state(source_state, wishes):
@@ -63,9 +63,18 @@ def _desired_iptables_table_state(table_name, table_state, table_wishes):
 def determine_desired_chain_state(chain_state, chain_wishes):
     if not chain_wishes:
         return chain_state
+    if not isinstance(chain_wishes, dict):
+        raise Exception(
+            'Chain wishes expected to be a dict '
+            '(with default_action and/or rules); got {}'.format(
+                smart_repr(chain_wishes)))
     return {
-        'default_action': determine_desired_chain_default_action(chain_state.get('default_action'), chain_wishes.get('default_action')),
-        'rules': determine_desired_chain_rules(chain_state.get('rules'), chain_wishes.get('rules')),
+        'default_action': determine_desired_chain_default_action(
+            chain_state.get('default_action'),
+            chain_wishes.get('default_action')),
+        'rules': determine_desired_chain_rules(
+            chain_state.get('rules'),
+            chain_wishes.get('rules')),
     }
 
 

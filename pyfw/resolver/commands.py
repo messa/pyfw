@@ -5,9 +5,18 @@ from ..util import zip_dicts
 
 def determine_commands(source_state, desired_state):
     commands = []
-    commands.extend(determine_ipsets_commands(source_state.get('ipsets'), desired_state.get('ipsets')))
-    commands.extend(determine_iptables_commands(source_state.get('iptables'), desired_state.get('iptables')))
-    commands.extend(determine_ip6tables_commands(source_state.get('ip6tables'), desired_state.get('ip6tables')))
+    commands.extend(
+        determine_ipsets_commands(
+            source_state.get('ipsets'),
+            desired_state.get('ipsets')))
+    commands.extend(
+        determine_iptables_commands(
+            source_state.get('iptables'),
+            desired_state.get('iptables')))
+    commands.extend(
+        determine_ip6tables_commands(
+            source_state.get('ip6tables'),
+            desired_state.get('ip6tables')))
     return commands
 
 
