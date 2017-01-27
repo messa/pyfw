@@ -57,7 +57,8 @@ def _desired_iptables_state(iptables_state, iptables_wishes):
 
 
 def _desired_iptables_table_state(table_name, table_state, table_wishes):
-    assert isinstance(table_state, dict), repr(table_state)
+    if not table_state:
+        table_state = {}
     if not table_wishes:
         return table_state
     desired_table_state = {}
