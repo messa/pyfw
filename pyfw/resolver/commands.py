@@ -55,32 +55,36 @@ def determine_iptables_commands(source_iptables_state, desired_iptables_state):
 
 
 def determine_iptables_table_commands(table_name, source_table_state, desired_table_state):
-    for chain_name, source_state, desired_state in \
-            zip_dicts(source_table_state, desired_table_state):
-        yield from determine_iptables_chain_commands(
-            table_name, chain_name, source_state, desired_state)
+    for i in [1, 2, 3]:
+        for chain_name, source_state, desired_state in \
+                zip_dicts(source_table_state, desired_table_state):
+            yield from determine_iptables_chain_commands(
+                table_name, chain_name, source_state, desired_state, phase=i)
 
 
-def determine_iptables_chain_commands(table_name, chain_name, source_chain_state, desired_chain_state):
+def determine_iptables_chain_commands(table_name, chain_name, source_chain_state, desired_chain_state, phase):
     if source_chain_state is None:
-        yield 'iptables -w -t {table} -N {chain}'.format(
-            table=table_name, chain=chain_name)
+        if phase == 1:
+            yield 'iptables -w -t {table} -N {chain}'.format(
+                table=table_name, chain=chain_name)
         source_chain_state = {
             'default_action': '-',
             'rules': [],
         }
     assert isinstance(source_chain_state, dict), smart_repr(source_chain_state)
-    yield from determine_iptables_chain_rule_commands(
-        table_name, chain_name,
-        source_chain_state['rules'],
-        desired_chain_state['rules'])
-    # default action command
-    desired_default_action = desired_chain_state['default_action']
-    source_default_action = source_chain_state.get('default_action')
-    assert desired_default_action
-    if desired_default_action != source_default_action:
-        yield 'iptables -w -t {table} -P {chain} {action}'.format(
-            table=table_name, chain=chain_name, action=desired_default_action)
+    if phase == 2:
+        yield from determine_iptables_chain_rule_commands(
+            table_name, chain_name,
+            source_chain_state['rules'],
+            desired_chain_state['rules'])
+    if phase == 3:
+        # default action command
+        desired_default_action = desired_chain_state['default_action']
+        source_default_action = source_chain_state.get('default_action')
+        assert desired_default_action
+        if desired_default_action != source_default_action:
+            yield 'iptables -w -t {table} -P {chain} {action}'.format(
+                table=table_name, chain=chain_name, action=desired_default_action)
 
 
 def determine_ip6tables_commands(source_ip6tables_state, desired_ip6tables_state):

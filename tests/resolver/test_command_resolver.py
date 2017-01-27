@@ -192,7 +192,7 @@ def test_create_chain():
     '''))['pyfw_state']
     commands = determine_commands(source_state, desired_state)
     assert commands == [
-        'iptables -w -t filter -A FORWARD -j FWD_PRE',
         'iptables -w -t filter -N FWD_PRE',
+        'iptables -w -t filter -A FORWARD -j FWD_PRE',
         'iptables -w -t filter -A FWD_PRE ! -i docker0 -o docker0 -m set ! --match-set allowed_hosts src -m comment --comment allowed_hosts_only -j REJECT --reject-with icmp-port-unreachable',
     ]
