@@ -46,18 +46,25 @@ def _desired_iptables_state(iptables_state, iptables_wishes):
     assert isinstance(iptables_wishes, dict)
     desired_iptables_state = {}
     for table_name, table_state, table_wishes in zip_dicts(iptables_state, iptables_wishes):
-        desired_iptables_state[table_name] = _desired_iptables_table_state(
-            table_name, table_state, table_wishes)
+        try:
+            desired_iptables_state[table_name] = _desired_iptables_table_state(
+                table_name, table_state, table_wishes)
+        except Exception as e:
+            raise Exception(
+                'Failed to compute determined iptables '
+                'table {!r} state: {!r}'.format(table_name, e)) from e
     return desired_iptables_state
 
 
 def _desired_iptables_table_state(table_name, table_state, table_wishes):
+    assert isinstance(table_state, dict), repr(table_state)
     if not table_wishes:
-        assert isinstance(table_state, dict)
         return table_state
-    chain_names = table_state.keys() | table_wishes.keys()
-    return {ch: determine_desired_chain_state(
-        table_state.get(ch), table_wishes.get(ch)) for ch in sorted(chain_names)}
+    desired_table_state = {}
+    for chain_name, chain_state, chain_wishes in zip_dicts(table_state, table_wishes):
+        desired_table_state[chain_name] = determine_desired_chain_state(
+            chain_state, chain_wishes)
+    return desired_table_state
 
 
 def determine_desired_chain_state(chain_state, chain_wishes):
