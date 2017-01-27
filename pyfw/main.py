@@ -12,7 +12,7 @@ from .util import pretty_yaml_dump
 from .resolver import determine_desired_state, determine_commands
 
 
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 
 default_wishes_file = '/etc/pyfw/wishes.yaml'
 
