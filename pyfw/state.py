@@ -20,6 +20,7 @@ def retrieve_state():
     from pyfw.parsing import parse_iptables_save, parse_ipset_list
     # just list - this causes to modprobe if kernel modules not loaded yet
     get_output(['iptables', '-L'])
+    get_output(['iptables', '-t', 'nat', '-L'])
     get_output(['ip6tables', '-L'])
     iptables_save = get_output(['iptables-save'])
     ip6tables_save = get_output(['ip6tables-save'])
