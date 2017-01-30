@@ -16,4 +16,4 @@ Usage
 
 ### Installation
 
-    pip install https://github.com/messa/pyfw/archive/v0.1.6.zip
+    pip install https://github.com/messa/pyfw/archive/v0.1.7.zip
